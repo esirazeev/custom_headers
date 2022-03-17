@@ -12,242 +12,218 @@
 #include <initializer_list>
 #include <iomanip>
 #include <iostream>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 
-class logger final
+enum class log_stream : uint8_t
 {
-  class color final
-  {
-  public:
-    explicit color(const char* color_str) : color_str_(color_str)
-    {
-    }
-    color(const color&) = delete;
-    color& operator=(const color&) = delete;
-    ~color() = default;
-
-    friend std::ostream& operator<<(std::ostream& out_stream, const color& obj)
-    {
-      return out_stream << obj.color_str_;
-    }
-
-  private:
-    const char* color_str_;
-  };
-
-  template <typename T>
-  class add_space final
-  {
-  public:
-    explicit add_space(const T& item) : ref_item_(item)
-    {
-    }
-    add_space(const add_space&) = delete;
-    add_space& operator=(const add_space&) = delete;
-    ~add_space() = default;
-
-    friend std::ostream& operator<<(std::ostream& out_stream, const add_space<T>& obj)
-    {
-      out_stream << obj.ref_item_;
-
-      if constexpr (!std::is_same_v<std::decay_t<decltype(obj.ref_item_)>, color>)
-      {
-        out_stream << " ";
-      }
-
-      return out_stream;
-    }
-
-  private:
-    const T& ref_item_;
-  };
-
-  class lable final
-  {
-  public:
-    lable(const char* lable_console, const char* lable_file) : lable_console_(lable_console), lable_file_(lable_file)
-    {
-    }
-
-    const char* console_lable() const noexcept
-    {
-      return lable_console_;
-    }
-
-    const char* file_lable() const noexcept
-    {
-      return lable_file_;
-    }
-
-  private:
-    const char* lable_console_;
-    const char* lable_file_;
-  };
-
-  enum stream : uint8_t
-  {
-    none_,
-    console_,
-    file_
-  };
-
-  enum type : uint8_t
-  {
-    info_,
-    warning_,
-    success_,
-    error_,
-    all_
-  };
-
-  template <typename... Args>
-  inline static void log(type type, Args&&... args);
-
-  inline static std::ofstream log_file_;
-  inline static auto log_file_name_{"log.txt"};
-  inline static auto stream_{stream::console_};
-
-  inline static std::unordered_set<type> type_{type::all_};
-
-  inline static const std::unordered_map<type, lable> lable_{
-      {type::info_, {"", "[INFO]:     "}},
-      {type::error_, {"\033[1;91m[ERROR]\033[0m:", "[ERROR]:    "}},
-      {type::success_, {"\033[1;92m[SUCCESS]\033[0m:", "[SUCCESS]:  "}},
-      {type::warning_, {"\033[1;93m[WARNING]\033[0m:", "[WARNING]:  "}},
-  };
-
-public:
-  logger() = delete;
-
-  constexpr static auto none{stream::none_};
-  constexpr static auto console{stream::console_};
-  constexpr static auto file{stream::file_};
-
-  constexpr static auto info{type::info_};
-  constexpr static auto warning{type::warning_};
-  constexpr static auto success{type::success_};
-  constexpr static auto error{type::error_};
-  constexpr static auto all{type::all_};
-
-  inline static const color reset_color{"\033[0m"};
-  inline static const color red_color{"\033[0;31m"};
-  inline static const color green_color{"\033[0;32m"};
-  inline static const color yellow_color{"\033[0;33m"};
-  inline static const color blue_color{"\033[0;34m"};
-  inline static const color purple_color{"\033[0;35m"};
-  inline static const color cyan_color{"\033[0;36m"};
-  inline static const color white_color{"\033[0;37m"};
-  inline static const color red_bold_color{"\033[1;31m"};
-  inline static const color green_bold_color{"\033[1;32m"};
-  inline static const color yellow_bold_color{"\033[1;33m"};
-  inline static const color blue_bold_color{"\033[1;34m"};
-  inline static const color purple_bold_color{"\033[1;35m"};
-  inline static const color cyan_bold_color{"\033[1;36m"};
-  inline static const color white_bold_color{"\033[1;37m"};
-
-  inline static void set_stream(stream type);
-  inline static void set_log_file_path(const char* path);
-  inline static void set_type(std::initializer_list<type> type_list);
-
-  template <typename... Args>
-  inline static void log_info_(Args&&... args);
-
-  template <typename... Args>
-  inline static void log_warning_(const char* function_name, Args&&... args);
-
-  template <typename... Args>
-  inline static void log_error_(const char* file_name, const char* function_name, int line, Args&&... args);
-
-  inline static void log_success_(const char* function_name);
-
-  inline static std::_Put_time<char> current_time(const char* format = "[%Y-%m-%d %H:%M:%S]");
+	CONSOLE,
+	FILE
 };
 
-inline void logger::set_stream(stream type)
+enum class log_type : uint8_t
 {
-  stream_ = type;
+	NONE,
+	INFO,
+	WARNING,
+	SUCCESS,
+	ERROR,
+	ALL
+};
 
-  switch (stream_)
-  {
-    case stream::none_:
-    case stream::console_:
-      log_file_.close();
-      break;
-    case stream::file_:
-      log_file_.open(log_file_name_, std::ios_base::binary | std::ios_base::app);
-    default:
-      break;
-  }
+struct item
+{
+	explicit item(const char* str) : str_(str) {}
+	const char* str_;
+};
+
+struct color : public item
+{
+	explicit color(const char* str) : item(str) {}
+};
+
+struct lable : public item
+{
+	explicit lable(const char* str) : item(str) {}
+};
+
+struct lable_attr : public item
+{
+	explicit lable_attr(const char* str) : item(str) {}
+};
+
+struct cur_time
+{
+};
+
+decltype(auto) operator<<(std::ostream& out_stream, const item& obj)
+{
+	return out_stream << obj.str_;
 }
 
-inline void logger::set_log_file_path(const char* path)
+decltype(auto) operator<<(std::ostream& out_stream, const cur_time& obj)
 {
-  log_file_name_ = path;
+	const auto current_time_t{std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+	return out_stream << std::put_time(std::localtime(&current_time_t), "[%Y-%m-%d %H:%M:%S]");
 }
 
-inline void logger::set_type(std::initializer_list<type> type_list)
+class logger final
 {
-  type_.clear();
-  type_.insert(type_list);
-}
+public:
+	logger() = delete;
 
-template <typename... Args>
-inline void logger::log_info_(Args&&... args)
-{
-  log(info, args...);
-  std::cerr << reset_color;
-}
+	inline static const color reset_color{"\033[0m"};
+	inline static const color red_color{"\033[0;31m"};
+	inline static const color green_color{"\033[0;32m"};
+	inline static const color yellow_color{"\033[0;33m"};
+	inline static const color blue_color{"\033[0;34m"};
+	inline static const color purple_color{"\033[0;35m"};
+	inline static const color cyan_color{"\033[0;36m"};
+	inline static const color white_color{"\033[0;37m"};
+	inline static const color red_bold_color{"\033[1;31m"};
+	inline static const color green_bold_color{"\033[1;32m"};
+	inline static const color yellow_bold_color{"\033[1;33m"};
+	inline static const color blue_bold_color{"\033[1;34m"};
+	inline static const color purple_bold_color{"\033[1;35m"};
+	inline static const color cyan_bold_color{"\033[1;36m"};
+	inline static const color white_bold_color{"\033[1;37m"};
 
-template <typename... Args>
-inline void logger::log_warning_(const char* function_name, Args&&... args)
-{
-  log(warning, function_name, ":", args...);
-  std::cerr << reset_color;
-}
+	inline static void set_log_stream(log_stream stream)
+	{
+		cur_log_stream = stream;
 
-template <typename... Args>
-inline void logger::log_error_(const char* file_name, const char* function_name, int line, Args&&... args)
-{
-  log(error, file_name, ":", line, ":", function_name, ":", args...);
-  std::cerr << reset_color;
-}
+		switch (cur_log_stream)
+		{
+		case log_stream::CONSOLE:
+			log_file.close();
+			break;
+		case log_stream::FILE:
+			log_file.open(log_file_path, std::ios_base::binary | std::ios_base::app);
+		default:
+			break;
+		}
+	}
 
-inline void logger::log_success_(const char* function_name)
-{
-  log(success, function_name);
-}
+	inline static void set_log_type(std::initializer_list<log_type> types)
+	{
+		log_types.clear();
+		log_types.insert(types);
+	}
 
-template <typename... Args>
-inline void logger::log(type type, Args&&... args)
-{
-  if (!type_.count(type) && !type_.count(all) && lable_.count(type))
-  {
-    return;
-  }
+	inline static void set_log_file_path(std::string_view path)
+	{
+		log_file_path = path;
+	}
 
-  switch (stream_)
-  {
-    case console:
-      (std::cerr << lable_.find(type)->second.console_lable() << ... << add_space(args)) << std::endl;
-      break;
+	template <typename... Args>
+	inline static void log_info_(Args&&... args)
+	{
+		log(log_type::INFO, cur_time{}, lable{get_lable(log_type::INFO)}, std::forward<Args>(args)...,
+		    reset_color);
+	}
 
-    case file: {
-      if (log_file_.is_open())
-      {
-        (log_file_ << current_time() << lable_.find(type)->second.file_lable() << ... << add_space(args)) << std::endl;
-      }
-    }
-    break;
-    default:
-      break;
-  }
-}
+	template <typename... Args>
+	inline static void log_warning_(const char* function_name, Args&&... args)
+	{
+		log(log_type::WARNING, cur_time{}, lable{get_lable(log_type::WARNING)}, white_bold_color,
+		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)...,
+		    reset_color);
+	}
 
-inline std::_Put_time<char> logger::current_time(const char* format)
-{
-  const auto current_time_t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
-  return std::put_time(std::localtime(&current_time_t), format);
-}
+	template <typename... Args>
+	inline static void log_error_(const char* file_name, const char* function_name, int32_t line, Args&&... args)
+	{
+		log(log_type::ERROR, cur_time{}, lable{get_lable(log_type::ERROR)}, white_bold_color,
+		    lable_attr{file_name}, lable_attr{":"},
+		    lable_attr{std::to_string(line).c_str()}, lable_attr{":"},
+		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)...,
+		    reset_color);
+	}
 
-#endif  // LOGGER_HPP
+	inline static void log_success_(const char* function_name)
+	{
+		log(log_type::SUCCESS, cur_time{}, lable{get_lable(log_type::SUCCESS)}, white_bold_color,
+		    lable_attr{function_name}, reset_color);
+	}
+
+private:
+	struct lable_type
+	{
+		const char* console;
+		const char* file;
+	};
+
+	inline static const char* get_lable(log_type type)
+	{
+		auto& lable{log_lables.find(type)->second};
+
+		return cur_log_stream == log_stream::CONSOLE ? lable.console : lable.file;
+	}
+
+	inline static std::ostream& get_stream()
+	{
+		return cur_log_stream == log_stream::CONSOLE ? std::cerr : log_file;
+	}
+
+	inline static bool is_logging_acceptable(log_type type)
+	{
+		return (log_types.contains(log_type::NONE) ||
+			(!log_types.contains(type) && !log_types.contains(log_type::ALL))) ?
+			       false :
+				     true;
+	}
+
+	template <typename... Args>
+	inline static void log(log_type type, Args&&... args)
+	{
+		if (!is_logging_acceptable(type))
+		{
+			return;
+		}
+
+		auto&& stream{get_stream()};
+		bool space_needed{false};
+
+		(print(stream, std::forward<Args>(args), space_needed), ...);
+
+		stream << std::endl;
+	}
+
+	template <typename T>
+	inline static void print(std::ostream& stream, T&& item, bool& space_needed)
+	{
+		if ((std::is_same_v<std::decay_t<T>, color> && cur_log_stream == log_stream::FILE) ||
+		    (std::is_same_v<std::decay_t<T>, cur_time> && cur_log_stream != log_stream::FILE))
+		{
+			return;
+		}
+
+		if (!std::is_same_v<std::decay_t<T>, color> && !std::is_same_v<std::decay_t<T>, lable> &&
+		    !std::is_same_v<std::decay_t<T>, lable_attr> && !std::is_same_v<std::decay_t<T>, cur_time>)
+		{
+			if (space_needed)
+			{
+				stream << " ";
+			}
+
+			space_needed = true;
+		}
+
+		stream << item;
+	}
+
+	inline static std::ofstream log_file;
+	inline static std::string log_file_path{"log.txt"};
+	inline static auto cur_log_stream{log_stream::CONSOLE};
+	inline static std::unordered_set<log_type> log_types{log_type::ALL};
+	inline static const std::unordered_map<log_type, lable_type> log_lables{
+		{log_type::INFO, {"", "[INFO]:"}},
+		{log_type::ERROR, {"\033[1;91m[ERROR]\033[0m:", "[ERROR]:"}},
+		{log_type::SUCCESS, {"\033[1;92m[SUCCESS]\033[0m:", "[SUCCESS]:"}},
+		{log_type::WARNING, {"\033[1;93m[WARNING]\033[0m:", "[WARNING]:"}},
+	};
+};
+
+#endif // LOGGER_HPP
