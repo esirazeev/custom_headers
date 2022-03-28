@@ -58,12 +58,12 @@ struct cur_time
 {
 };
 
-decltype(auto) operator<<(std::ostream& out_stream, const item& obj)
+inline decltype(auto) operator<<(std::ostream& out_stream, const item& obj)
 {
 	return out_stream << obj.str_;
 }
 
-decltype(auto) operator<<(std::ostream& out_stream, const cur_time& obj)
+inline decltype(auto) operator<<(std::ostream& out_stream, const cur_time& obj)
 {
 	const auto current_time_t{std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
 	return out_stream << std::put_time(std::localtime(&current_time_t), "[%Y-%m-%d %H:%M:%S]");
