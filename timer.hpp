@@ -3,19 +3,19 @@
 
 #include <chrono>
 
-#define timer_start() timer::start()
-#define timer_stop() timer::stop()
-#define timer_result_hours() timer::result<std::chrono::hours>()
-#define timer_result_minutes() timer::result<std::chrono::minutes>()
-#define timer_result_seconds() timer::result<std::chrono::seconds>()
-#define timer_result_milliseconds() timer::result<std::chrono::milliseconds>()
-#define timer_result_microseconds() timer::result<std::chrono::microseconds>()
-#define timer_result_nanoseconds() timer::result<std::chrono::nanoseconds>()
+#define timer_start() ctm::start()
+#define timer_stop() ctm::stop()
+#define timer_result_hours() ctm::result<std::chrono::hours>()
+#define timer_result_minutes() ctm::result<std::chrono::minutes>()
+#define timer_result_seconds() ctm::result<std::chrono::seconds>()
+#define timer_result_milliseconds() ctm::result<std::chrono::milliseconds>()
+#define timer_result_microseconds() ctm::result<std::chrono::microseconds>()
+#define timer_result_nanoseconds() ctm::result<std::chrono::nanoseconds>()
 
-class timer final
+class ctm final
 {
 public:
-	timer() = delete;
+	ctm() = delete;
 
 	inline static void start() noexcept
 	{

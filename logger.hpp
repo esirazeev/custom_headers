@@ -1,10 +1,10 @@
 #ifndef LOGGER_HPP
 #define LOGGER_HPP
 
-#define log_info(...) logger::log_info_(__VA_ARGS__)
-#define log_warning(...) logger::log_warning_(__PRETTY_FUNCTION__, __VA_ARGS__)
-#define log_success() logger::log_success_(__PRETTY_FUNCTION__)
-#define log_error(...) logger::log_error_(__FILE__, __PRETTY_FUNCTION__, __LINE__, __VA_ARGS__)
+#define log_info(...) clg::log_info_(__VA_ARGS__)
+#define log_warning(...) clg::log_warning_(__PRETTY_FUNCTION__, __VA_ARGS__)
+#define log_success() clg::log_success_(__PRETTY_FUNCTION__)
+#define log_error(...) clg::log_error_(__FILE__, __PRETTY_FUNCTION__, __LINE__, __VA_ARGS__)
 
 #include <chrono>
 #include <ctime>
@@ -17,62 +17,51 @@
 #include <unordered_map>
 #include <unordered_set>
 
-enum class log_stream : uint8_t
-{
-	CONSOLE,
-	FILE
-};
-
-enum class log_type : uint8_t
-{
-	NONE,
-	INFO,
-	WARNING,
-	SUCCESS,
-	ERROR,
-	ALL
-};
-
-struct item
-{
-	explicit item(const char* str) : str_(str) {}
-	const char* str_;
-};
-
-struct color : public item
-{
-	explicit color(const char* str) : item(str) {}
-};
-
-struct lable : public item
-{
-	explicit lable(const char* str) : item(str) {}
-};
-
-struct lable_attr : public item
-{
-	explicit lable_attr(const char* str) : item(str) {}
-};
-
-struct cur_time
-{
-};
-
-inline decltype(auto) operator<<(std::ostream& out_stream, const item& obj)
-{
-	return out_stream << obj.str_;
-}
-
-inline decltype(auto) operator<<(std::ostream& out_stream, const cur_time& obj)
-{
-	const auto current_time_t{std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
-	return out_stream << std::put_time(std::localtime(&current_time_t), "[%Y-%m-%d %H:%M:%S]");
-}
-
-class logger final
+class clg final
 {
 public:
-	logger() = delete;
+	clg() = delete;
+
+	enum log_stream : uint8_t
+	{
+		CONSOLE,
+		FILE
+	};
+
+	enum log_type : uint8_t
+	{
+		NONE,
+		INFO,
+		WARNING,
+		SUCCESS,
+		ERROR,
+		ALL
+	};
+
+	struct item
+	{
+		explicit item(const char* str) : str_(str) {}
+		const char* str_;
+	};
+
+	struct color : public item
+	{
+		explicit color(const char* str) : item(str) {}
+	};
+
+	struct lable : public item
+	{
+		explicit lable(const char* str) : item(str) {}
+	};
+
+	struct lable_attr : public item
+	{
+		explicit lable_attr(const char* str) : item(str) {}
+	};
+
+	struct cur_time
+	{
+	};
 
 	inline static const color reset_color{"\033[0m"};
 	inline static const color red_color{"\033[0;31m"};
@@ -128,18 +117,15 @@ public:
 	inline static void log_warning_(const char* function_name, Args&&... args)
 	{
 		log(log_type::WARNING, cur_time{}, lable{get_lable(log_type::WARNING)}, white_bold_color,
-		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)...,
-		    reset_color);
+		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)..., reset_color);
 	}
 
 	template <typename... Args>
 	inline static void log_error_(const char* file_name, const char* function_name, int32_t line, Args&&... args)
 	{
 		log(log_type::ERROR, cur_time{}, lable{get_lable(log_type::ERROR)}, white_bold_color,
-		    lable_attr{file_name}, lable_attr{":"},
-		    lable_attr{std::to_string(line).c_str()}, lable_attr{":"},
-		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)...,
-		    reset_color);
+		    lable_attr{file_name}, lable_attr{":"}, lable_attr{std::to_string(line).c_str()}, lable_attr{":"},
+		    lable_attr{function_name}, lable_attr{": "}, reset_color, std::forward<Args>(args)..., reset_color);
 	}
 
 	inline static void log_success_(const char* function_name)
@@ -225,5 +211,16 @@ private:
 		{log_type::WARNING, {"\033[1;93m[WARNING]\033[0m:", "[WARNING]:"}},
 	};
 };
+
+inline decltype(auto) operator<<(std::ostream& out_stream, const clg::item& obj)
+{
+	return out_stream << obj.str_;
+}
+
+inline decltype(auto) operator<<(std::ostream& out_stream, const clg::cur_time& obj)
+{
+	const auto current_time_t{std::chrono::system_clock::to_time_t(std::chrono::system_clock::now())};
+	return out_stream << std::put_time(std::localtime(&current_time_t), "[%Y-%m-%d %H:%M:%S]");
+}
 
 #endif // LOGGER_HPP
