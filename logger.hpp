@@ -6,24 +6,28 @@
 
 namespace logger
 {
-inline void print(const std::string& str)
+template<typename T>
+inline void print(T&& item)
 {
-	std::cout << str;
+	std::cout << std::forward<T>(item);
 }
 
-inline void println(const std::string str)
+template<typename T>
+inline void println(T&& item)
 {
-	std::cout << str << std::endl;
+	std::cout << std::forward<T>(item) << std::endl;
 }
 
-inline void print_error(const std::string error)
+template<typename T>
+inline void print_error(T&& item)
 {
-	std::cerr << error;
+	std::cerr << std::forward<T>(item);
 }
 
-inline void println_error(const std::string error)
+template<typename T>
+inline void println_error(T&& item)
 {
-	std::cerr << error << std::endl;
+	std::cerr << std::forward<T>(item) << std::endl;
 }
 } // namespace logger
 
