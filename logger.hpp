@@ -11,17 +11,17 @@ inline void print(const std::string& str)
 	std::cout << str;
 }
 
-inline void println(const std::string_view str)
+inline void println(const std::string str)
 {
 	std::cout << str << std::endl;
 }
 
-inline void print_error(const std::string_view error)
+inline void print_error(const std::string error)
 {
 	std::cerr << error;
 }
 
-inline void println_error(const std::string_view error)
+inline void println_error(const std::string error)
 {
 	std::cerr << error << std::endl;
 }
