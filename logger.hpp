@@ -18,6 +18,11 @@ inline void println(T&& item)
 	std::cout << std::forward<T>(item) << std::endl;
 }
 
+inline void println()
+{
+	std::cout << std::endl;
+}
+
 template<typename T>
 inline void print_error(T&& item)
 {
